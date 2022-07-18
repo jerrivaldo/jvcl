@@ -3,65 +3,46 @@ The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
 http://www.mozilla.org/MPL/MPL-1.1.html
-
 Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either expressed or implied. See the License for
 the specific language governing rights and limitations under the License.
-
 The Original Code is: JvDatePickerEdit, released on 2002-10-04.
-
 The Initial Developer of the Original Code is Oliver Giesen [giesen att lucatec dott de]
 Portions created by Oliver Giesen are Copyright (C) 2002 Lucatec GmbH.
 All Rights Reserved.
-
 Contributor(s): Peter Thörnqvist.
-
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.delphi-jedi.org
-
 Description:
   A replacement for TDateTimePicker which is better suited for keyboard-input by
   ultimately descending from TCustomMaskEdit.
-
   Other notable features (especially in comparison to the native DATETIMEPICKER):
-
   - The control is able to construct a suitable EditMask from a valid date format
     string such as the global ShortDateFormat (the default) which should make it
     adapt well to regional settings / individual requirements.
-
   - It is possible to specify a NoDateText which will be displayed when no date
     is selected. The original datetimepicker would display 1899-12-31 in such
     cases. This feature could be further controlled by the AllowNoDate and
     NoDateShortcut properties. With the NoDateValue you can control what TDateTime
     value should be used. It defaults to 0, what means 1899-12-31.
-
 Known issues / not (yet) implemented features:
-
   - there is no real support for DateFormats containing any literal characters
     other than the defined DateSeparator, especially spaces. it /might/ work in
     some cases but in the majority of cases it will not.
     TODO: simply disallow such characters or implement proper handling?
-
   - as the embedded MS-calendar does not support dates prior to 1752-09-14,
     neither does this control. this is not yet handled gracefully in absolutely
     all situations though.
-
   - the Min/MaxYear contstraints are currently commented out as they are not
     functional in the current state. They would still require some work to make
     up for two-digit year entries.
-
   - the control does (currently) not allow for time entry
   - it really is a control for date entry only.
-
 -----------------------------------------------------------------------------}
 // $Id$
-
 unit JvDatePickerEdit;
-
 {$I jvcl.inc}
-
 interface
-
 uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
@@ -71,7 +52,6 @@ uses
   System.UITypes,
   {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvCalendar, JvDropDownForm, JvCheckedMaskEdit, JvToolEdit;
-
 type
   {Types used to handle and convert between date format strings and EditMasks:}
   TJvDateFigure = (dfNone, dfYear, dfMonth, dfDay);
@@ -82,13 +62,11 @@ type
     Index: Byte;
   end;
   TJvDateFigures = array[0..2] of TJvDateFigureInfo;
-
   TJvPopupMonthCalendar2 = class(TJvMonthCalendar2)
   protected
     procedure LButtonDownFocus; override;
     procedure WndProc(var Msg: TMessage); override;
   end;
-
   {A dropdown form with an embedded calendar control.}
   TJvDropCalendar = class(TJvCustomDropDownForm)
   private
@@ -121,9 +99,7 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnSelect: TNotifyEvent read FOnSelect write FOnSelect;
   end;
-
   TJvGetValidDateStringEvent = procedure(Sender: TObject; var DateText: string) of object;
-
   TJvCustomDatePickerEdit = class(TJvCustomCheckedMaskEdit)
   private
     FAllowNoDate: Boolean;
@@ -234,7 +210,6 @@ type
     property ShowButton default True;
     property StoreDate: Boolean read FStoreDate write FStoreDate default False;
     property StoreDateFormat: Boolean read FStoreDateFormat write FStoreDateFormat default False;
-
     property OnGetValidDateString: TJvGetValidDateStringEvent read FOnGetValidDateString write FOnGetValidDateString;
   public
     constructor Create(AOwner: TComponent); override;
@@ -242,13 +217,11 @@ type
     class function DefaultImageIndex: TImageIndex; override;
     procedure Clear; override;
     function IsEmpty: Boolean; virtual;
-
     function HasValidDate: Boolean;
-
     property EditMask: string read GetEditMask write SetEditMask;
     property Text: TCaption read GetText write SetText;
+    procedure CompletaData; // Jerry
   end;
-
   {$IFDEF RTL230_UP}
   [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
   {$ENDIF RTL230_UP}
@@ -351,14 +324,12 @@ type
     property OnParentColorChange;
     property OnSetFocus;
     property OnStartDrag;
-
     property OnGetValidDateString;
     property OnPopupShown;
     property OnPopupHidden;
     property OnPopupChange;
     property OnPopupValueAccepted;
   end;
-
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
@@ -368,9 +339,7 @@ const
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-
 implementation
-
 uses
   Variants, SysUtils, Menus, Forms,
   {$IFDEF HAS_UNIT_CHARACTER}
@@ -378,12 +347,9 @@ uses
   {$ENDIF HAS_UNIT_CHARACTER}
   JclStrings,
   JvConsts, JvTypes, JvResources, JclSysUtils;
-
 const
   DateMaskSuffix = '!;1;_';
-
 //=== { TJvCustomDatePickerEdit } ============================================
-
 procedure TJvCustomDatePickerEdit.AcceptValue(const Value: Variant);
 var
   TextBefore: string;
@@ -393,7 +359,6 @@ var
   OldSeparator: Char;
 begin
   TextBefore := Text;
-
   // Mantis 3056: If the date format is not the system's default, the value
   // displayed in the text box after having selected a date in the popup
   // will be 30.12.1899. This is because the variant will be converted to a
@@ -421,7 +386,6 @@ begin
   end
   else
     inherited AcceptValue(TmpValue);
-
   // Inherited AcceptValue will change the base class Text property, thus not
   // calling our SetText method. As a result, we must set the date in this case
   if Text <> TextBefore then
@@ -430,7 +394,6 @@ begin
     Self.Date := TmpDate;
   end;
 end;
-
 function TJvCustomDatePickerEdit.ActiveFigure: TJvDateFigureInfo;
 var
   I: Integer;
@@ -444,12 +407,39 @@ begin
     end;
   Result.Figure := dfNone;
 end;
-
 function TJvCustomDatePickerEdit.GetValidDateString(const Text: string): string;
 begin
   Result := Text;
   if Assigned(FOnGetValidDateString) then
     FOnGetValidDateString(Self, Result);
+end;
+procedure TJvCustomDatePickerEdit.CompletaData;
+var
+  Ano, Mes, Dia: Word;
+  procedure ProximoAno;
+  begin
+    if (StrToInt(FormatDateTime('mm', now)) >= 10)
+    and (Self.Date < StrToDate(FormatDateTime('dd/mm/yyyy', now))) then
+    begin
+      DecodeDate(Self.Date, Ano, Mes, Dia);
+      Ano := Ano + 1;
+      Text := DateToStr(EncodeDate(Ano, Mes, Dia));
+    end;
+  end;
+begin
+  if (Copy(Text, 1, 2) <> '  ') then
+  begin
+    if (Copy(Text, 4, 2) = '  ') or (Copy(Text, 4, 2) = 'mm') then
+    begin
+      Text := Copy(Text, 1, 3) + FormatDateTime('mm', Now) + '/';
+      ProximoAno;
+    end;
+    if (Copy(Text, 7, 4) = '    ') then
+    begin
+      Text := Copy(Text, 1, 6) + FormatDateTime('yyyy', Now);
+      ProximoAno;
+    end;
+  end;
 end;
 
 function TJvCustomDatePickerEdit.ConvertStrToDate(const AText: string; var ADate: TDateTime;
@@ -475,7 +465,6 @@ begin
     JclFormatSettings.ShortDateFormat := OldFormat;
   end;
 end;
-
 function TJvCustomDatePickerEdit.AttemptTextToDate(const AText: string;
   var ADate: TDateTime; const AForce: Boolean; const ARaise: Boolean): Boolean;
 var
@@ -505,7 +494,6 @@ begin
   else
     Result := False;
 end;
-
 procedure TJvCustomDatePickerEdit.CalChanged;
 var
   NewDate: TDateTime;
@@ -530,7 +518,6 @@ begin
     end;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.CalCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
   P: TPoint;
@@ -541,24 +528,20 @@ begin
   GetCursorPos(P);
   CanClose := not PtInRect(Button.BoundsRect, Button.ScreenToClient(P));
 end;
-
 procedure TJvCustomDatePickerEdit.CalDestroy(Sender: TObject);
 begin
   PopupCloseUp(Self, False);
 end;
-
 procedure TJvCustomDatePickerEdit.CalSelect(Sender: TObject);
 begin
   CalChanged;
   PopupCloseUp(Self, True);
 end;
-
 procedure TJvCustomDatePickerEdit.Change;
 var
   lDate: TDateTime;
   lFigVal: Word;
   lActFig: TJvDateFigureInfo;
-
   procedure SetActiveFigVal(const AValue: Word);
   begin
     BeginInternalChange;
@@ -570,7 +553,6 @@ var
       EndInternalChange;
     end;
   end;
-
   procedure EnforceRange(const AMin, AMax: Word);
   begin
     if lFigVal > AMax then
@@ -579,16 +561,12 @@ var
     if lFigVal < AMin then
       SetActiveFigVal(AMin);
   end;
-
 begin
   if InternalChanging then
     Exit;
-
   FDateError := False;
-
   if [csDesigning, csDestroying] * ComponentState <> [] then
     Exit;
-
   if (Text <> NoDateText) and (Text <> '') then
   begin
     lDate := Self.Date;
@@ -605,7 +583,6 @@ begin
     if (not FDeleting) and EnableValidation then
     begin
       lActFig := ActiveFigure;
-
       if lActFig.Figure <> dfNone then
       begin
         lFigVal := StrToIntDef(Trim(Copy(Text, lActFig.Start, lActFig.Length)), 0);
@@ -630,12 +607,10 @@ begin
   end;
   inherited Change;
 end;
-
 procedure TJvCustomDatePickerEdit.Clear;
 begin
   Checked := False;
 end;
-
 procedure TJvCustomDatePickerEdit.ClearMask;
 begin
   if EditMask <> '' then
@@ -645,14 +620,15 @@ begin
       EditMask := '';
   end;
 end;
-
 constructor TJvCustomDatePickerEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-
   FAllowNoDate := True;
   FAlwaysReturnEditDate := True;
-  FDate := SysUtils.Date;
+//  FDate := SysUtils.Date;
+  FDate := NoDateValue; // Jerry
+  DateFormat := 'dd/MM/yyyy';
+  JclFormatSettings.ShortDateFormat := 'dd/MM/yyyy';
   FDateError := False;
   FDeleting := False;
   FEnableValidation := True;
@@ -662,9 +638,7 @@ begin
   FNoDateText := '';
   FStoreDate := False;
   FStoreDateFormat := False;
-
   FCalAppearance := TJvMonthCalAppearance.Create;
-
   ControlState := ControlState + [csCreating];
   try
     ImageKind := ikDatePicker; { force update }
@@ -673,7 +647,6 @@ begin
     ControlState := ControlState - [csCreating];
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.CreatePopup;
 begin
   if not Assigned(FPopup) then
@@ -692,17 +665,14 @@ begin
     end;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.CreateWnd;
 begin
   inherited CreateWnd;
-
   // obones: changed to DateFormat instead of ShortDateFormat, it was
   // preventing any date format different from the system's value to be
   // set at design time
   SetDateFormat(DateFormat);
 end;
-
 function TJvCustomDatePickerEdit.DateFormatToEditMask(
   var ADateFormat: string): string;
 begin
@@ -722,7 +692,6 @@ begin
   StrReplace(Result, ' ', '_', []);
   Result := Trim(Result) + DateMaskSuffix;
 end;
-
 function TJvCustomDatePickerEdit.DateToText(const ADate: TDateTime): string;
 var
   OldSep: Char;
@@ -736,18 +705,15 @@ begin
     JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
-
 class function TJvCustomDatePickerEdit.DefaultImageIndex: TImageIndex;
 begin
   Result := TJvDateEdit.DefaultImageIndex;
 end;
-
 destructor TJvCustomDatePickerEdit.Destroy;
 begin
   FreeAndNil(FCalAppearance);
   inherited Destroy;
 end;
-
 function TJvCustomDatePickerEdit.DetermineDateSeparator(AFormat: string): Char;
 begin
   AFormat := StrRemoveChars(Trim(AFormat), ['d', 'm', 'M', 'y']);
@@ -756,14 +722,12 @@ begin
   else
     Result := JclFormatSettings.DateSeparator;
 end;
-
 procedure TJvCustomDatePickerEdit.DoCtl3DChanged;
 begin
   inherited DoCtl3DChanged;
   { (rb) Conflicts with ButtonFlat property }
   Button.Flat := not Self.Ctl3D;
 end;
-
 function TJvCustomDatePickerEdit.ValidateEditText: string;
 var
   lDate: TDateTime;
@@ -792,17 +756,16 @@ begin
     EditText := '';
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.CMExit(var Msg: TMessage);
 var
   OrgEditText: string;
 begin
+  CompletaData; // Jerry
   OrgEditText := ValidateEditText;
   inherited;
   if OrgEditText <> '' then
     EditText := OrgEditText;
 end;
-
 procedure TJvCustomDatePickerEdit.DoKillFocus(const ANextControl: TWinControl);
 begin
   if ((ANextControl = nil) or ((ANextControl <> FPopup) and
@@ -810,7 +773,6 @@ begin
     PopupCloseUp(Self, False);
   inherited DoKillFocus(ANextControl);
 end;
-
 procedure TJvCustomDatePickerEdit.WMKeyDown(var Message: TMessage);
 begin
   if PopupVisible and (FPopup is TJvDropCalendar) and FPopup.Visible and (Message.LParam <> 1) then // protect against TCustomMaskEdit.SetCursor
@@ -818,7 +780,6 @@ begin
   else
     inherited;
 end;
-
 procedure TJvCustomDatePickerEdit.WMKeyUp(var Message: TMessage);
 begin
   if PopupVisible and (FPopup is TJvDropCalendar) and FPopup.Visible and (Message.LParam <> 1) then // protect against TCustomMaskEdit.SetCursor
@@ -826,7 +787,6 @@ begin
   else
     inherited;
 end;
-
 procedure TJvCustomDatePickerEdit.WMChar(var Message: TMessage);
 begin
   if PopupVisible and (FPopup is TJvDropCalendar) and FPopup.Visible then
@@ -834,7 +794,6 @@ begin
   else
     inherited;
 end;
-
 {$IFDEF JVCLThemesEnabled}
 function TJvCustomDatePickerEdit.GetDatePickerThemeButtonMinTextSize: Integer;
 var
@@ -848,20 +807,17 @@ begin
     S := DateToText(FDate);
     Size.cx := 0;
     Size.cy := 0;
-
     DC := GetDC(HWND_DESKTOP);
     SaveFont := SelectObject(DC, Font.Handle);
     Windows.GetTextExtentPoint32(DC, PChar(S), Length(S), Size);
     SelectObject(DC, SaveFont);
     ReleaseDC(HWND_DESKTOP, DC);
-
     Result := Size.cx;
   end
   else
     Result := inherited GetDatePickerThemeButtonMinTextSize;
 end;
 {$ENDIF JVCLThemesEnabled}
-
 //procedure TJvCustomDatePickerEdit.DropButtonClick(Sender: TObject);
 //begin
 //  if Dropped then
@@ -869,7 +825,6 @@ end;
 //  else
 //    DropDown;
 //end;
-
 //procedure TJvCustomDatePickerEdit.DropDown;
 //begin
 //  if not Dropped then
@@ -891,14 +846,12 @@ end;
 //    end;
 //  end;
 //end;
-
 procedure TJvCustomDatePickerEdit.EnabledChanged;
 begin
   inherited EnabledChanged;
   if not Enabled and Dropped then
     PopupCloseUp(Self, False);
 end;
-
 procedure TJvCustomDatePickerEdit.FindSeparators(var AFigures: TJvDateFigures;
   const AText: string; const AGetLengths: Boolean);
 begin
@@ -906,7 +859,6 @@ begin
   AFigures[0].Start := 1;
   AFigures[1].Start := Pos(DateSeparator, AText) + 1;
   AFigures[2].Start := StrLastPos(DateSeparator, AText) + 1;
-
   if AGetLengths then
   begin
     AFigures[0].Length := AFigures[1].Start - 2;
@@ -914,39 +866,32 @@ begin
     AFigures[2].Length := Length(AText) - AFigures[2].Start + 1;
   end;
 end;
-
 function TJvCustomDatePickerEdit.GetChecked: Boolean;
 begin
   Result := not IsEmpty;
 end;
-
 function TJvCustomDatePickerEdit.GetDate: TDateTime;
 begin
   Result := FDate;
 end;
-
 function TJvCustomDatePickerEdit.GetDropped: Boolean;
 begin
   //Result := Assigned(FDropFo) and not (csDestroying in FDropFo.ComponentState);
   Result := PopupVisible;
 end;
-
 function TJvCustomDatePickerEdit.GetEditMask: string;
 begin
   Result := inherited EditMask;
 end;
-
 function TJvCustomDatePickerEdit.GetEnableValidation: Boolean;
 begin
   Result := FEnableValidation;
 end;
-
 function TJvCustomDatePickerEdit.GetPopupValue: Variant;
 begin
   if FPopup is TJvDropCalendar then
     Result := TJvDropCalendar(FPopup).SelDate;
 end;
-
 function TJvCustomDatePickerEdit.GetText: TCaption;
 var
   OldSep: Char;
@@ -959,14 +904,12 @@ begin
     JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
-
 function TJvCustomDatePickerEdit.HasValidDate: Boolean;
 var
   TmpDate: TDateTime;
 begin
   Result := AttemptTextToDate(Text, TmpDate, False, False);
 end;
-
 procedure TJvCustomDatePickerEdit.HidePopup;
 begin
 //  inherited;
@@ -977,32 +920,26 @@ begin
       OnPopupHidden(Self);
   end;
 end;
-
 function TJvCustomDatePickerEdit.IsEmpty: Boolean;
 begin
   Result := FDate = NoDateValue;
 end;
-
 function TJvCustomDatePickerEdit.IsEmptyMaskText(const AText: string): Boolean;
 begin
   Result := AnsiSameStr(AText, FEmptyMaskText);
 end;
-
 function TJvCustomDatePickerEdit.IsNoDateShortcutStored: Boolean;
 begin
   Result := (NoDateShortcut <> TextToShortCut(RsDefaultNoDateShortcut));
 end;
-
 function TJvCustomDatePickerEdit.IsNoDateTextStored: Boolean;
 begin
   Result := NoDateText <> '';
 end;
-
 function TJvCustomDatePickerEdit.IsNoDateValueStored: Boolean;
 begin
   Result := NoDateValue <> 0;
 end;
-
 procedure TJvCustomDatePickerEdit.RestoreMaskForKeyPress;
 begin
   try
@@ -1017,7 +954,6 @@ begin
     raise;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.KeyDown(var Key: Word; Shift: TShiftState);
 var
   // Indicates whether FDeleting is set here from False to True.
@@ -1025,10 +961,26 @@ var
   OrgEditText: string;
   WasUnmasked: Boolean;
 begin
+  // Jerry
+  case Key of
+    107: // +
+    begin
+      if (Date = 0) then
+        Date := Trunc(Now)
+      else
+        Date := Date + 1;
+    end;
+    109: // -
+    begin
+      if (Date = 0) then
+        Date := Trunc(Now)
+      else
+        Date := Date - 1;
+    end;
+  end;
   DeleteSetHere := False;
   WasUnmasked := not IsMasked;
   RestoreMaskForKeyPress;
-
   if AllowNoDate and (ShortCut(Key, Shift) = NoDateShortcut) and EditCanModify then
     Date := NoDateValue
   else
@@ -1038,7 +990,6 @@ begin
         begin
           DeleteSetHere := not FDeleting;
           FDeleting := True;
-
           { Workaround for an TMaskEdit bug: If the NoDateText is visible and the
             user presses VK_BACK the TCustomMaskEdit.DeleteKeys will raise an
             access violation.
@@ -1056,7 +1007,6 @@ begin
   inherited KeyDown(Key, Shift);
   FDeleting := FDeleting and not DeleteSetHere;
 end;
-
 procedure TJvCustomDatePickerEdit.KeyPress(var Key: Char);
 var
   OldSep: Char;
@@ -1064,7 +1014,6 @@ begin
   { If used in JvDBGrid the KeyDown event isn't invoked, so the EditMask isn't set
     when the KeyPress event triggers. }
   RestoreMaskForKeyPress;
-
   { this makes the transition easier for users used to non-mask-aware edit controls
     as they could continue typing the separator character without the cursor
     auto-advancing to the next figure when they don't expect it : }
@@ -1076,7 +1025,6 @@ begin
   end;
   { EditCanModify could have triggered a ClearMask. }
   RestoreMaskForKeyPress;
-
   OldSep := JclFormatSettings.DateSeparator;
   JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
@@ -1085,7 +1033,6 @@ begin
     JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.Loaded;
 var
   SavedWidth : Integer;
@@ -1108,7 +1055,6 @@ begin
     Width := SavedWidth;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.ParseFigures(var AFigures: TJvDateFigures;
   AFormat: string; const AMask: string);
 var
@@ -1118,12 +1064,9 @@ begin
   {Determine the position of the individual figures in the mask string.}
   FindSeparators(AFigures, AMask);
   AFigures[2].Length := AFigures[2].Length - Length(DateMaskSuffix);
-
   AFormat := UpperCase(AFormat);
-
   {Determine the order of the individual figures in the format string.}
   FindSeparators(DummyFigures, AFormat, False);
-
   for I := 0 to 2 do
   begin
     case AFormat[DummyFigures[I].Start] of
@@ -1137,18 +1080,15 @@ begin
     AFigures[I].Index := I;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.PopupChange;
 begin
   inherited PopupChange;
   DoChange;
 end;
-
 procedure TJvCustomDatePickerEdit.RaiseNoDate;
 begin
   raise EJVCLException.CreateResFmt(@RsEMustHaveADate, [Name]);
 end;
-
 procedure TJvCustomDatePickerEdit.ResetDateFormat;
 begin
   FInternalDateFormat := FDateFormat;
@@ -1165,35 +1105,29 @@ begin
   end;
   UpdateDisplay;
 end;
-
 procedure TJvCustomDatePickerEdit.RestoreMask;
 begin
   if EditMask = '' then
     EditMask := FMask;
 end;
-
 procedure TJvCustomDatePickerEdit.SetAllowNoDate(const AValue: Boolean);
 begin
   if AllowNoDate <> AValue then
   begin
     FAllowNoDate := AValue;
-
     if AValue and IsEmpty then
       if csDesigning in ComponentState then
         Self.Date := SysUtils.Date
       else
         RaiseNoDate;
-
     if not AValue then
       ShowCheckBox := False;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.SetCalAppearance(const AValue: TJvMonthCalAppearance);
 begin
   FCalAppearance.Assign(AValue);
 end;
-
 procedure TJvCustomDatePickerEdit.SetChecked(const AValue: Boolean);
 begin
   inherited SetChecked(AValue);
@@ -1209,7 +1143,6 @@ begin
     Change;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.SetDate(const AValue: TDateTime);
 begin
   if (FDate <> AValue) and ValidateDate(AValue) then
@@ -1222,7 +1155,6 @@ begin
   end;
   UpdateDisplay;
 end;
-
 procedure TJvCustomDatePickerEdit.SetDateFormat(AValue: string);
 var
   UseDefaultDateFormat: Boolean;
@@ -1244,7 +1176,6 @@ begin
     ResetDateFormat;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.SetDateSeparator(const AValue: Char);
 begin
   if AValue <> FDateSeparator then
@@ -1253,14 +1184,12 @@ begin
     ResetDateFormat;
   end;
 end;
-
 { The only purpose of the following overrides is to overcome a known issue in
   Mask.pas where it is impossible to use the slash character in an EditMask if
   SysUtils.DateSeparator is set to something else even if the slash was escaped
   as a literal. By inheritance the following methods all end up eventually in
   Mask.MaskIntlLiteralToChar which performs the unwanted conversion. By
   temporarily setting SysUtils.DateSeparator we could circumvent this. }
-
 procedure TJvCustomDatePickerEdit.SetEditMask(const AValue: string);
 var
   OldSep: Char;
@@ -1268,7 +1197,6 @@ var
 begin
 {  if csDesigning in ComponentState then
     Exit;}
-
   OldSep := JclFormatSettings.DateSeparator;
   JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
@@ -1292,13 +1220,11 @@ begin
     JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.SetNoDateText(const AValue: string);
 begin
   FNoDateText := AValue;
   UpdateDisplay;
 end;
-
 procedure TJvCustomDatePickerEdit.SetNoDateValue(const AValue: TDateTime);
 begin
   if AValue <> FNoDateValue then
@@ -1307,7 +1233,6 @@ begin
     UpdateDisplay;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.SetPopupValue(const Value: Variant);
 var
   NewDate: TDateTime;
@@ -1323,14 +1248,12 @@ begin
     TJvDropCalendar(FPopup).SelDate := NewDate;
   end;
 end;
-
 function TJvCustomDatePickerEdit.AcceptPopup(var Value: Variant): Boolean;
 begin
   Result := inherited AcceptPopup(Value);
   if Result then
     Result := Value <> FPopupDate;
 end;
-
 procedure TJvCustomDatePickerEdit.SetShowCheckbox(const AValue: Boolean);
 begin
   inherited SetShowCheckbox(AValue);
@@ -1338,7 +1261,6 @@ begin
     AllowNoDate := True;
   UpdateDisplay;
 end;
-
 procedure TJvCustomDatePickerEdit.SetText(const AValue: TCaption);
 var
   OldSep: Char;
@@ -1351,30 +1273,25 @@ begin
     JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.ShowPopup(Origin: TPoint);
 begin
   if FPopup is TJvDropCalendar then
   begin
     FPopup.SetBounds(Origin.X, Origin.Y, FPopup.Width, FPopup.Height);
     FPopup.Visible := True; // overriden CM_SHOWINGCHANGED will take care of SW_SHOWNOACTIVATE
-
     // Emulate a LButton-Click to give the month calendar the look of being focused
     SendMessage(TJvDropCalendar(FPopup).FCal.Handle, WM_LBUTTONDOWN, MK_LBUTTON, MakeLong(Word(-1), Word(-1)));
     SendMessage(TJvDropCalendar(FPopup).FCal.Handle, WM_LBUTTONUP, 0, MakeLong(Word(-1), Word(-1)));
-
     if Assigned(OnPopupShown) then
       OnPopupShown(Self);
   end
   else
     inherited ShowPopup(Origin);
 end;
-
 procedure TJvCustomDatePickerEdit.UpdateDisplay;
 begin
   if InternalChanging or (csLoading in ComponentState) then
     Exit;
-
   // (obones): We need a valid handle here, because setting the text
   // will read the value of DateSeparator. This value is #0 until the
   // CreateWnd method is called.
@@ -1384,7 +1301,6 @@ begin
   // and day would not be separated at all.
   // Doing this means that a parent is required for the change to work.
   HandleNeeded;
-
   BeginInternalChange;
   try
     inherited SetChecked(not IsEmpty);
@@ -1405,7 +1321,6 @@ begin
     EndInternalChange;
   end;
 end;
-
 function TJvCustomDatePickerEdit.ValidateDate(const ADate: TDateTime): Boolean;
 begin
   if not AllowNoDate and (ADate = NoDateValue) then
@@ -1422,14 +1337,12 @@ begin
   else
     Result := True;
 end;
-
 procedure TJvCustomDatePickerEdit.WMPaste(var Msg: TMessage);
 var
   OldSep: Char;
 begin
   if csDesigning in ComponentState then
     Exit;
-
   OldSep := JclFormatSettings.DateSeparator;
   JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
@@ -1438,20 +1351,16 @@ begin
     JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
-
 procedure TJvCustomDatePickerEdit.ResetPopupValue;
 begin
   // do nothing and keep the current value
 end;
 
-
 //=== { TJvPopupMonthCalendar2 } =============================================
-
 procedure TJvPopupMonthCalendar2.LButtonDownFocus;
 begin
   // no inherited, as it would lead to an endless SetFocus recursion
 end;
-
 procedure TJvPopupMonthCalendar2.WndProc(var Msg: TMessage);
 begin
   case Msg.Msg of
@@ -1461,9 +1370,7 @@ begin
     inherited WndProc(Msg);
   end;
 end;
-
 //=== { TJvDropCalendar } ====================================================
-
 procedure TJvDropCalendar.CalKeyPress(Sender: TObject; var Key: Char);
 begin
   if WithBeep then
@@ -1477,7 +1384,6 @@ begin
     DoChange;
   end;
 end;
-
 procedure TJvDropCalendar.CalKillFocus(const ASender: TObject;
   const ANextControl: TWinControl);
 var
@@ -1491,28 +1397,23 @@ begin
   else
     FocusKilled(0);
 end;
-
 procedure TJvDropCalendar.CalSelChange(Sender: TObject;
   StartDate, EndDate: TDateTime);
 begin
   DoChange;
 end;
-
 procedure TJvDropCalendar.CalSelect(Sender: TObject; StartDate, EndDate: TDateTime);
 begin
   DoSelect;
 end;
-
 procedure TJvDropCalendar.CMShowingChanged(var Msg: TMessage);
 begin
   // Override TCustomForm.CMShowingChanged so that we can use SW_SHOWNOACTIVATE
-
   if not Showing then
   begin
     inherited;
     Exit;
   end;
-
   Include(FFormState, fsShowing);
   try
     try
@@ -1525,13 +1426,11 @@ begin
     Exclude(FFormState, fsShowing);
   end;
 end;
-
 procedure TJvDropCalendar.CreateParams(var Params: TCreateParams);
 begin
   inherited CreateParams(Params);
   Params.Style := Params.Style and not WS_BORDER; // MonthCal2 has its own border
 end;
-
 constructor TJvDropCalendar.CreateWithAppearance(AOwner: TComponent;
   const AAppearance: TJvMonthCalAppearance);
 begin
@@ -1550,7 +1449,6 @@ begin
     Parent := Self;
   end;
 end;
-
 destructor TJvDropCalendar.Destroy;
 begin
   if Assigned(FCal) then
@@ -1562,7 +1460,6 @@ begin
     end;
   inherited Destroy;
 end;
-
 procedure TJvDropCalendar.DoCancel;
 begin
   if Assigned(OnCancel) then
@@ -1570,13 +1467,11 @@ begin
   else
     Release;
 end;
-
 procedure TJvDropCalendar.DoChange;
 begin
   if Assigned(OnChange) then
     OnChange(Self);
 end;
-
 procedure TJvDropCalendar.DoSelect;
 var
   LastCloseOnLeave: Boolean;
@@ -1592,7 +1487,6 @@ begin
     CloseOnLeave := LastCloseOnLeave;
   end;
 end;
-
 procedure TJvDropCalendar.DoShow;
 begin
   {
@@ -1603,12 +1497,10 @@ begin
   TJvMonthCalendar2(FCal).Today := Date; { update the current day }
   inherited DoShow;
 end;
-
 function TJvDropCalendar.GetSelDate: TDateTime;
 begin
   Result := TJvMonthCalendar2(FCal).DateFirst;
 end;
-
 procedure TJvDropCalendar.SetFocus;
 begin
   if FCal.CanFocus then
@@ -1616,18 +1508,14 @@ begin
   else
     inherited SetFocus;
 end;
-
 procedure TJvDropCalendar.SetSelDate(const AValue: TDateTime);
 begin
   TJvMonthCalendar2(FCal).DateFirst := AValue;
 end;
-
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
-
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-
 end.
